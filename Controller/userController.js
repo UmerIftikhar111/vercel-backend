@@ -1,5 +1,6 @@
 
 const User = require('../Models/userModel');
+const Hotel = require('../Models/hotelModel')
 const jwt = require('jsonwebtoken');
 
 
@@ -16,31 +17,56 @@ let Signup = (req, res) => {
 
 
 let Signin = (req, res) => {
-
     let email = req.body.email;
     let password = req.body.password;
-    
+    let hotelmail = req.body.hotelmail;
+  
+    // Find user by email
     User.findOne({ email: email })
-        .then(user => {
-            if (user.password == password) {
-
-                let token = jwt.sign({
-                    email: user.email,
-                    id: user._id,
-                    role: user.role
-                }, process.env.secret_key, { expiresIn: '2h' })
-                res.status(200).json({"Success":true,user,token,  'Message': 'user logged in successfully' });
-            }
-            else {
-                res.status(400).json({"Success":false, 'Message': 'user login failed' });
-            }
+      .then((user) => {
+        if (!user) {
+          return res.status(400).json({ Success: false, Message: 'User not found' });
         }
-        )
-        .catch(err => {
-            res.status(400).json({ "Success":false,'Message': 'user login failed '+err });
+  
+        if (user.password !== password) {
+          return res.status(400).json({ Success: false, Message: 'Incorrect password' });
         }
-        );
-}
+  
+        // Find hotel by email
+        Hotel.findOne({ contactInformation: hotelmail })
+          .then((hotel) => {
+            if (!hotel) {
+              return res.status(400).json({ Success: false, Message: 'Hotel not found' });
+            }
+  
+            let token = jwt.sign(
+              {
+                email: user.email,
+                id: user._id,
+                role: user.role,
+                hotelId: hotel._id,
+              },
+              process.env.secret_key,
+              { expiresIn: '3h' }
+            );
+  
+            res.status(200).json({
+              Success: true,
+              user,
+              token,
+              hotelId: hotel._id,
+              Message: 'User logged in successfully',
+            });
+          })
+          .catch((err) => {
+            res.status(400).json({ Success: false, Message: 'Failed to find hotel: ' + err });
+          });
+      })
+      .catch((err) => {
+        res.status(400).json({ Success: false, Message: 'User login failed: ' + err });
+      });
+  };
+  
 
 module.exports = {
     Signup,

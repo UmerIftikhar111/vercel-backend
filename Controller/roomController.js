@@ -17,12 +17,13 @@ const addRoom = async (req, res, next) => {
       return res.status(404).json({ error: 'Hotel not found' });
     }
 
-    const foundRoom = await Room.findOne({ roomNumber });
+    const foundRoom = await Room.findOne({ roomNumber:roomNumber,hotel:hotel._id });
 
     if (foundRoom) {
       return res.status(409).json({ error: 'Room with the same room number already exists' });
     }
 
+    
     const room = new Room({
       roomNumber,
       type,

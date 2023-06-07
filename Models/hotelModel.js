@@ -12,7 +12,7 @@ const hotelSchema = new mongoose.Schema({
   contactInformation: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   availableRoomTypes: {
     type: [String],
